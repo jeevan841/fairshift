@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FairShift</title>
+<style>
+:root{--ink:#14313a;--bg:#eaf0f2;--card:#fff;--teal:#0f6b73;--warn:#b93a08;--line:#b9c9ce}
+*{box-sizing:border-box}
+body{margin:0;font:18px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--ink);color:#fff;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:22px;margin:0;flex:1}
+main{max-width:640px;margin:0 auto;padding:16px}
+section{background:var(--card);border:2px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+h2{font-size:20px;margin:0 0 10px}
+button,select,input,textarea{font:inherit;color:inherit;min-height:48px;border-radius:8px;border:2px solid var(--ink);padding:8px 14px;background:#fff}
+button{cursor:pointer;background:var(--teal);color:#fff;border-color:var(--teal);font-weight:600}
+button.alt{background:#fff;color:var(--ink);border-color:var(--ink)}
+button.big{width:100%;min-height:84px;font-size:24px}
+button.out{background:var(--warn);border-color:var(--warn)}
+button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:#fff}
+:focus-visible{outline:4px solid #f2a900;outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.row>*{flex:1}
+table{width:100%;border-collapse:collapse}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:left}
+.total{font-size:28px;font-weight:700}
+.warn{border-left:8px solid var(--warn);padding:8px 12px;background:#fff1ea;margin:8px 0}
+.tag{display:inline-block;padding:2px 10px;border-radius:99px;color:#fff;font-size:15px;font-weight:600}
+.urgent{background:#6b0f0f}.high{background:var(--warn)}.medium{background:#8a5a00}.low{background:var(--teal)}
+textarea{width:100%;min-height:90px}
+label{display:block;font-weight:600;margin:8px 0 4px}
+.sr{position:absolute;left:-9999px}
+@media (prefers-reduced-motion:no-preference){button{transition:filter .15s}button:hover{filter:brightness(1.1)}}
+</style>
+</head>
+<body>
+<header>
+  <h1>FairShift</h1>
+  <label class="sr" for="lang">Language</label>
+  <select id="lang" aria-label="Language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="ta">தமிழ்</option></select>
+  <button class="alt" id="tabW" aria-pressed="true"></button>
+  <button class="alt" id="tabA" aria-pressed="false"></button>
+</header>
+<main id="app" aria-live="polite"></main>
+<script>
+const T={
+en:{worker:'Worker',admin:'Admin',who:'Who are you?',in:'🟢 Check in',out:'🔴 Check out',onShift:'You are on shift',offShift:'You are off shift',payslip:'Your payslip',regular:'Regular hours',overtime:'Overtime hours',total:'Total pay',listen:'🔊 Listen',report:'Report a problem',anon:'Anonymous. Your name is never saved.',kind:'Type',hazard:'Safety hazard',pay:'Pay issue',harassment:'Harassment',other:'Other',speak:'🎤 Speak',send:'Send report',code:'Your tracking code',track:'Check status',status:'Status',open:'Open',in_progress:'In progress',fixed:'Fixed',tired:'You may be overworked. Please rest.',pin:'Admin PIN',login:'Open dashboard',people:'Workforce',hours:'Hours',risk:'Quit risk',flags:'Fatigue flags',reports:'Anonymous reports',export:'Download CSV',bad:'Wrong PIN',none:'None yet',WEEK_HOURS:'Over 48 h this week',LONG_SHIFT:'Shift over 12 h',SHORT_REST:'Under 10 h rest',high:'High',medium:'Medium',low:'Low',urgent:'Urgent',explain:'🤖 Explain my pay',insight:'AI summary'},
+hi:{worker:'कर्मचारी',admin:'प्रबंधक',who:'आप कौन हैं?',in:'🟢 आगमन दर्ज करें',out:'🔴 प्रस्थान दर्ज करें',onShift:'आप ड्यूटी पर हैं',offShift:'आप ड्यूटी पर नहीं हैं',payslip:'आपकी वेतन पर्ची',regular:'सामान्य घंटे',overtime:'ओवरटाइम घंटे',total:'कुल वेतन',listen:'🔊 सुनें',report:'समस्या बताएँ',anon:'गुमनाम। आपका नाम सहेजा नहीं जाता।',kind:'प्रकार',hazard:'सुरक्षा खतरा',pay:'वेतन की समस्या',harassment:'उत्पीड़न',other:'अन्य',speak:'🎤 बोलकर बताएँ',send:'भेजें',code:'आपका ट्रैकिंग कोड',track:'स्थिति देखें',status:'स्थिति',open:'खुला',in_progress:'प्रगति में',fixed:'ठीक हो गया',tired:'आप बहुत थके हो सकते हैं। कृपया आराम करें।',pin:'प्रबंधक पिन',login:'डैशबोर्ड खोलें',people:'कर्मचारी',hours:'घंटे',risk:'नौकरी छोड़ने का जोखिम',flags:'थकान संकेत',reports:'गुमनाम रिपोर्ट',export:'CSV डाउनलोड',bad:'गलत पिन',none:'अभी कोई नहीं',WEEK_HOURS:'इस सप्ताह 48 घंटे से अधिक',LONG_SHIFT:'12 घंटे से लंबी शिफ्ट',SHORT_REST:'10 घंटे से कम आराम',high:'ज़्यादा',medium:'मध्यम',low:'कम',urgent:'अत्यावश्यक',explain:'🤖 मेरा वेतन समझाएँ',insight:'AI सारांश'},
+ta:{worker:'பணியாளர்',admin:'நிர்வாகி',who:'நீங்கள் யார்?',in:'🟢 வருகை பதிவு',out:'🔴 புறப்பாடு பதிவு',onShift:'நீங்கள் பணியில் உள்ளீர்கள்',offShift:'நீங்கள் பணியில் இல்லை',payslip:'உங்கள் சம்பளச் சீட்டு',regular:'வழக்கமான மணி',overtime:'கூடுதல் நேர மணி',total:'மொத்த சம்பளம்',listen:'🔊 கேளுங்கள்',report:'சிக்கலைத் தெரிவிக்கவும்',anon:'பெயர் இல்லாமல். உங்கள் பெயர் சேமிக்கப்படாது.',kind:'வகை',hazard:'பாதுகாப்பு ஆபத்து',pay:'சம்பளப் பிரச்சினை',harassment:'தொந்தரவு',other:'மற்றவை',speak:'🎤 பேசிச் சொல்லுங்கள்',send:'அனுப்பு',code:'உங்கள் கண்காணிப்பு குறியீடு',track:'நிலையைப் பார்',status:'நிலை',open:'திறந்தது',in_progress:'நடைபெறுகிறது',fixed:'சரிசெய்யப்பட்டது',tired:'நீங்கள் மிகவும் சோர்வாக இருக்கலாம். ஓய்வு எடுங்கள்.',pin:'நிர்வாகி பின்',login:'டாஷ்போர்டு திற',people:'பணியாளர்கள்',hours:'மணி',risk:'வேலை விடும் அபாயம்',flags:'சோர்வு எச்சரிக்கை',reports:'பெயரற்ற புகார்கள்',export:'CSV பதிவிறக்கம்',bad:'தவறான பின்',none:'இன்னும் இல்லை',WEEK_HOURS:'இந்த வாரம் 48 மணிக்கு மேல்',LONG_SHIFT:'12 மணிக்கு மேல் ஷிப்ட்',SHORT_REST:'10 மணிக்கும் குறைவான ஓய்வு',high:'அதிகம்',medium:'நடுத்தரம்',low:'குறைவு',urgent:'அவசரம்',explain:'🤖 என் சம்பளத்தை விளக்கு',insight:'AI சுருக்கம்'}};
+const VOICE={en:'en-IN',hi:'hi-IN',ta:'ta-IN'};
+let lang='en',view='worker',pin='',wid=null,sector='construction',lastCode='';
+const $=s=>document.querySelector(s);
+const t=k=>(T[lang]&&T[lang][k])||T.en[k]||k;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(p,o={}){const r=await fetch('/api'+p,{...o,headers:{'Content-Type':'application/json','x-admin-pin':pin}});if(!r.ok)throw new Error(r.status);return r}
+const get=async p=>(await api(p)).json();
+const send=async(p,m,b)=>(await api(p,{method:m,body:b?JSON.stringify(b):undefined})).json();
+
+function setLang(l){lang=l;document.documentElement.lang=l;render()}
+function setView(v){view=v;render()}
+function speak(text){if(!window.speechSynthesis)return;const u=new SpeechSynthesisUtterance(text);u.lang=VOICE[lang];speechSynthesis.cancel();speechSynthesis.speak(u)}
+function dictate(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){$('#txt').focus();return}const r=new R();r.lang=VOICE[lang];r.onresult=e=>{$('#txt').value+=e.results[0][0].transcript+' '};r.start()}
+
+async function render(){
+  $('#tabW').textContent=t('worker');$('#tabA').textContent=t('admin');
+  $('#tabW').setAttribute('aria-pressed',view==='worker');$('#tabA').setAttribute('aria-pressed',view==='admin');
+  $('#app').innerHTML=view==='worker'?await workerView():await adminView();
+}
+
+async function workerView(){
+  const people=await get('/workers');
+  if(!wid)wid=people[0].id;
+  const d=await get('/worker/'+wid);sector=d.worker.sector;const p=d.payslip;
+  const opts=people.map(w=>`<option value="${w.id}" ${w.id===wid?'selected':''}>${esc(w.name)} · ${esc(w.place)} (${esc(w.sector)})</option>`).join('');
+  const speech=`${t('payslip')}: ${t('regular')} ${p.regularHours}, ${t('overtime')} ${p.overtimeHours}, ${t('total')} ${p.total} rupees`;
+  return `<section><label for="who">${t('who')}</label><select id="who" onchange="wid=this.value;render()">${opts}</select></section>
+  <section><h2>${d.checkedIn?t('onShift'):t('offShift')}</h2>
+  <button class="big ${d.checkedIn?'out':''}" onclick="toggle()">${d.checkedIn?t('out'):t('in')}</button>
+  ${d.flags.length?`<div class="warn" role="alert">⚠️ ${t('tired')}<br>${d.flags.map(f=>esc(t(f))).join(', ')}</div>`:''}</section>
+  <section><h2>${t('payslip')}</h2><table>
+  <tr><td>${t('regular')}</td><td>${p.regularHours} h × ₹${p.hourlyRate}</td><td>₹${p.regularPay}</td></tr>
+  <tr><td>${t('overtime')}</td><td>${p.overtimeHours} h × ₹${p.hourlyRate} × ${p.otMultiplier}</td><td>₹${p.overtimePay}</td></tr></table>
+  <p class="total">${t('total')}: ₹${p.total}</p>
+  <button class="alt" onclick="speak(${esc(JSON.stringify(speech))})">${t('listen')}</button> <button onclick="explain()">${t('explain')}</button><p id="exp" role="status"></p></section>
+  <section><h2>${t('report')}</h2><p>🔒 ${t('anon')}</p>
+  <label for="cat">${t('kind')}</label><select id="cat">${['hazard','pay','harassment','other'].map(c=>`<option value="${c}">${t(c)}</option>`).join('')}</select>
+  <label for="txt" class="sr">${t('report')}</label><textarea id="txt" maxlength="500"></textarea>
+  <div class="row"><button class="alt" onclick="dictate()">${t('speak')}</button><button onclick="submitReport()">${t('send')}</button></div>
+  <div id="rep">${lastCode?`<p>${t('code')}: <strong>${esc(lastCode)}</strong></p>`:''}</div>
+  <label for="trk">${t('code')}</label><div class="row"><input id="trk" value="${esc(lastCode)}" maxlength="8"><button class="alt" onclick="track()">${t('track')}</button></div>
+  <p id="trkOut" role="status"></p></section>`;
+}
+async function explain(){const el=$('#exp');el.textContent='…';const r=await send('/worker/'+wid+'/explain','POST',{lang});el.textContent=r.text;speak(r.text)}
+async function toggle(){await send('/worker/'+wid+'/toggle','POST');render()}
+async function submitReport(){
+  const text=$('#txt').value.trim();if(text.length<3)return $('#txt').focus();
+  const r=await send('/reports','POST',{category:$('#cat').value,text,sector});lastCode=r.code;render()}
+async function track(){try{const r=await get('/reports/'+encodeURIComponent($('#trk').value));$('#trkOut').textContent=t('status')+': '+t(r.status)}catch{$('#trkOut').textContent='?'}}
+
+async function adminView(){
+  let d;
+  try{d=await get('/admin/summary')}catch{
+    return `<section><h2>${t('admin')}</h2>${pin?`<p class="warn" role="alert">${t('bad')}</p>`:''}<label for="pin">${t('pin')}</label>
+    <input id="pin" type="password" autocomplete="off"><div class="row"><button onclick="pin=$('#pin').value;render()">${t('login')}</button></div></section>`}
+  let ins={text:''};try{ins=await get('/admin/insight')}catch{}
+  const rows=d.workers.map(w=>`<tr><td>${esc(w.name)}<br><small>${esc(w.place)}</small></td><td>${w.hours} (+${w.overtimeHours})</td>
+    <td><span class="tag ${w.risk}">${t(w.risk)}</span></td><td>${w.flags.map(f=>esc(t(f))).join('<br>')||'–'}</td></tr>`).join('');
+  const reps=d.reports.length?d.reports.map(r=>`<tr><td>${esc(r.code)}<br><small>${t(r.category)}</small></td><td><span class="tag ${esc(r.triage.severity)}">${t(r.triage.severity)}</span> ${esc(r.triage.summary)}<br><small>→ ${esc(r.triage.nextStep)}</small></td>
+    <td><label class="sr" for="s${r.code}">${t('status')}</label><select id="s${r.code}" onchange="setStatus('${r.code}',this.value)">${['open','in_progress','fixed'].map(s=>`<option value="${s}" ${s===r.status?'selected':''}>${t(s)}</option>`).join('')}</select></td></tr>`).join(''):`<tr><td>${t('none')}</td></tr>`;
+  return `<section><h2>🤖 ${t('insight')}</h2><p style="white-space:pre-line">${esc(ins.text)}</p></section>
+  <section><h2>${t('people')}</h2><div style="overflow-x:auto"><table><tr><th>${t('worker')}</th><th>${t('hours')}</th><th>${t('risk')}</th><th>${t('flags')}</th></tr>${rows}</table></div>
+  <div class="row"><button class="alt" onclick="exportCsv()">${t('export')}</button></div></section>
+  <section><h2>${t('reports')}</h2><div style="overflow-x:auto"><table>${reps}</table></div></section>`;
+}
+async function setStatus(code,status){await send('/admin/reports/'+code,'PATCH',{status});render()}
+async function exportCsv(){const r=await api('/admin/export.csv');const a=document.createElement('a');a.href=URL.createObjectURL(await r.blob());a.download='fairshift.csv';a.click()}
+
+$('#lang').onchange=e=>setLang(e.target.value);$('#tabW').onclick=()=>setView('worker');$('#tabA').onclick=()=>setView('admin');
+render();
+</script>
+</body>
+</html>
