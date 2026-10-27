@@ -1,0 +1,10 @@
+{
+  "name": "fairshift",
+  "version": "1.0.0",
+  "description": "FairShift: fair shifts, clear pay and anonymous safety reporting for shift workers (SDG 8)",
+  "main": "src/server.js",
+  "scripts": { "start": "node src/server.js", "test": "node --test \"test/*.test.js\"" },
+  "engines": { "node": ">=20" },
+  "dependencies": { "express": "^4.19.2" },
+  "license": "MIT"
+}
